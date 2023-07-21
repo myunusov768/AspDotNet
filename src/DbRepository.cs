@@ -17,9 +17,30 @@ public sealed class DbRepository : IDbRepository
         return (await _dbTodo.SaveChangesAsync(token)) > 0;
     }
 
+    public async Task<bool> DeletesAsync(int[] ids, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        foreach(var id in ids)
+        {
+            var todo = await _dbTodo.Todos.SingleAsync<Todo>(x=>x.Id == id, token);
+            _dbTodo.Remove<Todo>(todo);
+        }
+        return (await _dbTodo.SaveChangesAsync(token)) > 0;
+    }
+
     public async Task<List<Todo>> GetAsync(CancellationToken token)
     {
         return await _dbTodo.Todos.ToListAsync<Todo>(token);
+    }
+
+    public async Task<List<Todo>> GetAsyncIsCompleted(CancellationToken token)
+    {
+        return await _dbTodo.Todos.Where<Todo>(x=>x.State == true).ToListAsync<Todo>();
+    }
+
+    public async Task<List<Todo>> GetAsyncUnCompleted(CancellationToken token)
+    {
+        return await _dbTodo.Todos.Where<Todo>(x=>x.State == false).ToListAsync<Todo>();
     }
 
     public async Task<Todo> PostAsync(Todo todo, CancellationToken token)
